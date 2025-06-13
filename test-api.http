@@ -1,0 +1,42 @@
+### PaperMind API Test
+
+# Test basic connection
+GET http://localhost:5000/
+
+###
+
+# Test Claude API
+GET http://localhost:5000/api/research/test-claude
+
+###
+
+# Research Analysis - BERT
+POST http://localhost:5000/api/research/analyze
+Content-Type: application/json
+
+{
+  "researchTopic": "natural language processing BERT",
+  "maxPapers": 3
+}
+
+###
+
+# Research Analysis - Computer Vision
+POST http://localhost:5000/api/research/analyze
+Content-Type: application/json
+
+{
+  "researchTopic": "computer vision object detection",
+  "maxPapers": 4
+}
+
+###
+
+# Research Analysis - Transformers
+POST http://localhost:5000/api/research/analyze
+Content-Type: application/json
+
+{
+  "researchTopic": "transformer architecture attention mechanism",
+  "maxPapers": 5
+}

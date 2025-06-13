@@ -16,14 +16,26 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 라우트 import
+const papersRouter = require('./routes/papers');
+const researchRouter = require('./routes/research');
+
 // 라우트 설정
 app.get('/', (req, res) => {
   res.json({
     message: '🧠 PaperMind Backend Server',
     version: '1.0.0',
-    status: 'running'
+    status: 'running',
+    endpoints: {
+      papers: '/api/papers',
+      health: '/api/health'
+    }
   });
 });
+
+// API 라우트 연결
+app.use('/api/papers', papersRouter);
+app.use('/api/research', researchRouter);
 
 // API 상태 확인
 app.get('/api/health', (req, res) => {
