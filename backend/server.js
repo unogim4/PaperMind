@@ -7,21 +7,28 @@ const path = require('path');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001; // 포트 변경
 
 // 미들웨어 설정
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000'
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 요청 로깅 미들웨어
+app.use((req, res, next) => {
+  console.log(`📡 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
 
 // 라우트 설정
 app.get('/', (req, res) => {
   res.json({
     message: '🧠 PaperMind Backend Server',
     version: '1.0.0',
-    status: 'running'
+    status: 'running',
+    features: ['MCP Integration', 'Claude AI', 'arXiv Search']
   });
 });
 
@@ -30,16 +37,31 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    env: {
+      nodeVersion: process.version,
+      claudeConfigured: !!process.env.CLAUDE_API_KEY
+    }
   });
 });
 
+// MCP 라우트 연결
+try {
+  const mcpRoutes = require('./routes/mcp');
+  app.use('/api/mcp', mcpRoutes);
+  console.log('✅ MCP routes loaded successfully');
+} catch (error) {
+  console.error('❌ Failed to load MCP routes:', error.message);
+}
+
 // 에러 핸들링 미들웨어
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('🚨 Server Error:', err.stack);
   res.status(500).json({
-    error: 'Something went wrong!',
-    message: err.message
+    error: 'Internal Server Error',
+    message: err.message,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -47,7 +69,15 @@ app.use((err, req, res, next) => {
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Route not found',
-    path: req.originalUrl
+    path: req.originalUrl,
+    availableRoutes: [
+    'GET /',
+    'GET /api/health',
+    'POST /api/mcp/optimize-keywords',
+    'POST /api/mcp/smart-search',
+    'POST /api/mcp/generate-abstract',
+      'GET /api/mcp/health'
+      ]
   });
 });
 
@@ -55,6 +85,7 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 PaperMind Backend Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🤖 MCP endpoints: http://localhost:${PORT}/api/mcp/`);
 });
 
 module.exports = app;
